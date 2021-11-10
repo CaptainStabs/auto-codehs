@@ -1,4 +1,4 @@
-from seleniumwire import webdriver
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -82,7 +82,7 @@ class WebDriver:
                 print("Email button dumb error")
                 times_looped += 1
                 print(times_looped)
-                found=False
+                found = False
 
         print("Typing Email")
         email_box.send_keys(email)
@@ -122,8 +122,6 @@ class WebDriver:
         section_number = "234939"
         print("Going to first assignment")
         for assignment_number in range(50244505, 50244630):
-            print(self.driver.requests[-5].headers)
-            print(type(self.driver.requests))
             print("starting loop")
             url = f"https://codehs.com/student/{student_number}/section/{section_number}/assignment/{assignment_number}/"
             self.driver.get(url)
@@ -148,16 +146,32 @@ class WebDriver:
             if not is_quiz:
                 if is_video_assignment:
                     self.submit_answer(student_assignment_id)
-                    found = False
-                    times_looped = 0
-                    while not found or times_looped < 100:
+
+                    # found = False
+                    # times_looped = 0
+                    # # Click th eplay button
+                    # while not found or times_looped < 100:
+                    #     try:
+                    #         actions.click(self.driver.find_element_by_xpath('//*[@id="pre-video-container"]')).perform()
+                    #         found = True
+                    #     except exceptions.StaleElementReferenceException:
+                    #         print("StaleElementReferenceException!")
+                    #         times_looped += 1
+                    #         found = False
+
+                    video_player = WebDriverWait(self.driver, 10).until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="video-types"]/button[2]'))
+                    )
+
+                    video_player.click()
+
+                    element_exists = True
+
+                    while element_exists:
                         try:
-                            actions.click(self.driver.find_element_by_xpath('//*[@id="navbar-collapse-1"]/ul[1]/li[5]/button')).perform()
-                            found = True
-                        except exceptions.StaleElementReferenceException:
-                            print("StaleElementReferenceException!")
-                            times_looped += 1
-                            found = False
+                            video_player.send_keys(Keys.ARROW_RIGHT)
+                        except exceptions.ElementNotInteractableException:
+                            element_exists = False
 
                 try:
                     if "Example:" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'):
@@ -175,6 +189,8 @@ class WebDriver:
 
                 except exceptions.NoSuchElementException:
                     pass
+
+                
 
             # print(self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'))
 
