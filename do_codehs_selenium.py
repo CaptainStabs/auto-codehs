@@ -10,6 +10,8 @@ from selenium.common import exceptions
 from _secrets import email, password, driver_path, binary_path
 import requests
 import logging
+from urllib import parse
+import time
 # import heartrate; heartrate.trace(browser=True, daemon=True)
 
 class WebDriver:
@@ -122,12 +124,18 @@ class WebDriver:
 
         student_number = "1758629"
         section_number = "234939"
-        print("Going to first assignment")
-        for assignment_number in range(50244505, 50244630):
-            # print("starting loop")
-            url = f"https://codehs.com/student/{student_number}/section/{section_number}/assignment/{assignment_number}/"
-            self.driver.get(url)
+        assignment_number = "50244509"
+        end_number = "50244630"
 
+        finished = False
+        print("Going to first assignment")
+        # for assignment_number in range(50244505, 50244630):
+        # print("starting loop")
+
+        url = f"https://codehs.com/student/{student_number}/section/{section_number}/assignment/{assignment_number}/"
+        self.driver.get(url)
+
+        while not finished:
             try:
                 self.driver.find_element_by_xpath('//*[@id="video-types"]')
                 is_video_assignment = True
@@ -135,18 +143,48 @@ class WebDriver:
             except exceptions.NoSuchElementException:
                 is_video_assignment = False
 
-            student_assignment_id = self.driver.find_element_by_xpath(f'//*[@href="/student/{student_number}/section/{section_number}/assignment/{assignment_number}/"]')
+            # student_assignment_id = self.driver.find_element_by_xpath(f'//*[@href="/student/{student_number}/section/{section_number}/assignment/{assignment_number}/"]')
+
+            type_found = False
 
             try:
                 if "Quiz" in self.driver.find_element_by_xpath('/html/body/div[4]/h1').text:
                     logging.info("Is quiz")
                     is_quiz = True
+                    type_found = True
                 else:
                     is_quiz = False
+                    type_found = False
             except exceptions.NoSuchElementException:
                 is_quiz = False
 
             if not is_quiz:
+
+                try:
+                    parsed_url = parse.urlparse(self.driver.current_url)
+
+                    # This could be compressed down to one line
+                    self.driver.find_element_by_xpath('//*[@id="library-main"]/div[2]/div/div/a[1]').click()
+                    # url_path = str(parsed_url[2]).split('/')
+                    # next_assignment_number = int(url_path[-2]) + 1
+                    # print(next_assignment_number)
+                    # new_path = "/".join(parsed_url[2].split('/')[:-2]) + f"/{next_assignment_number}"
+                    # print(new_path)
+                    #
+                    #
+                    # print("https://" + str('/'.join(parsed_url[1:2])) + new_path)
+                    # self.driver.get("https://" + str('/'.join(parsed_url[1:2])) + new_path)
+                    time.sleep(5)
+                    type_found = True
+
+
+                except exceptions.NoSuchElementException:
+                    logging.error("NoSuchElementException, is not lesson page")
+
+                except exceptions.StaleElementReferenceException:
+                    logging.error("StaleElementReferenceException, probably not a lesson page")
+
+
                 if is_video_assignment:
                     # self.submit_answer(student_assignment_id)
 
@@ -157,34 +195,100 @@ class WebDriver:
                     self.driver.execute_script("arguments[0].style.display = '';", post_video_screen)
 
                     self.driver.find_element_by_xpath('//*[@id="done-button"]').click()
+                    type_found = True
+                if not type_found:
+                    try:
+                        if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span').text:
+                            logging.info("Is Example")
 
-                try:
-                    if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span').text:
-                        logging.info("Is Example")
-                        found = False
-                        times_looped = 0
-                        while not found or times_looped < 100:
+                            # times_looped = 0
+                            #
+                            # while times_looped < 100:
+                            #     try:
+                            #         self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div/div/button')
+                            #         times_looped = 101
+                            #
+                            #     except exceptions.StaleElementReferenceException:
+                            #         logging.debug("StaleElementReferenceException on directions modal")
+                            #         logging.info("StaleElementReferenceExceptiondfdasfadsf")
+                            #         times_looped += 1
+
+                            times_looped = 0
+                            # Click next
+                            while times_looped < 100:
+                                try:
+                                    next_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                                    # Fewer variables if I just pretend
+                                    # that 101 = True for found
+                                    self.driver.execute_script("arguments[0].click();", next_button)
+                                    times_looped = 101
+
+                                except exceptions.StaleElementReferenceException:
+                                    print("StaleElementReferenceException")
+                                    times_looped += 1
+
+                                except exceptions.JavascriptException:
+                                    logging.info("JavascriptException")
+                                    times_looped += 1
+
+                                except exceptions.ElementClickInterceptedException:
+                                    break
+
+                            type_found = True
+
+                    except exceptions.NoSuchElementException:
+                        logging.info("Example header not found")
+                        pass
+                if not type_found:
+                    try:
+                        if "Exercise" in self.driver.page_source:
+                            # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
+                            solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
+                            
+                            answer = requests.request("GET", solution_url)
+
                             try:
-                                actions.click(self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]')).perform()
-                                found = True
+                                self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/div[2]/button').click()
 
-                            except exceptions.StaleElementReferenceException:
-                                print("StaleElementReferenceException")
-                                found = False
-                                times_looped += 1
+                            except exceptions.ElementNotInteractableException:
+                                logging.error("ElementNotInteractableException for assignment modal")
 
-                except exceptions.NoSuchElementException:
-                    logging.info("Example header not found")
-                    pass
+                            answer_box = self.driver.find_element_by_xpath('//*[@id="ace-editor"]/textarea')
+                            answer_box.send_keys(answer.text)
 
-                try:
-                    if "Exercise" in self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2').text:
-                        print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
-                        break
+                            try:
+                                self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
 
-                except exceptions.NoSuchElementException:
-                    logging.error("No Exercise header element")
-                    pass
+                            except exceptions.ElementNotInteractableException:
+                                logging.error("ElementNotInteractableException on submit button")
+
+                            type_found = True
+
+                    except exceptions.NoSuchElementException:
+                        logging.error("No Exercise header element")
+                        pass
+
+
+            if is_quiz:
+                # There is no next button on the quiz until you complete it,
+                # so it just increments the assignment number instead
+                parsed_url = parse.urlparse(self.driver.current_url)
+
+                # This could be compressed down to one line
+                url_path = str(parsed_url[2]).split('/')
+                next_assignment_number = int(url_path[-2]) + 1
+                print(next_assignment_number)
+                new_path = "/".join(parsed_url[2].split('/')[:-2]) + f"/{next_assignment_number}"
+                print(new_path)
+
+
+                print("https://" + str('/'.join(parsed_url[1:2])) + new_path)
+                self.driver.get("https://" + str('/'.join(parsed_url[1:2])) + new_path)
+                type_found = True
+
+            if end_number in self.driver.current_url:
+                finished = True
+
 
             # print(self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'))
 
