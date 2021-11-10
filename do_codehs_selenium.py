@@ -173,6 +173,8 @@ class WebDriver:
                         except exceptions.ElementNotInteractableException:
                             element_exists = False
 
+
+
                 try:
                     if "Example:" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'):
                         found = False
@@ -190,7 +192,12 @@ class WebDriver:
                 except exceptions.NoSuchElementException:
                     pass
 
-                
+                try:
+                    if "Exercise" in self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()'):
+                        print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
+
+                except exceptions.NoSuchElementException:
+                    pass
 
             # print(self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'))
 
