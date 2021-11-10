@@ -138,7 +138,7 @@ class WebDriver:
             student_assignment_id = self.driver.find_element_by_xpath(f'//*[@href="/student/{student_number}/section/{section_number}/assignment/{assignment_number}/"]')
 
             try:
-                if "Quiz" in self.driver.find_element_by_xpath('/html/body/div[4]/h1/text()'):
+                if "Quiz" in self.driver.find_element_by_xpath('/html/body/div[4]/h1').text:
                     logging.info("Is quiz")
                     is_quiz = True
                 else:
@@ -148,49 +148,18 @@ class WebDriver:
 
             if not is_quiz:
                 if is_video_assignment:
-                    self.submit_answer(student_assignment_id)
+                    # self.submit_answer(student_assignment_id)
 
-                    # found = False
-                    # times_looped = 0
-                    # # Click th eplay button
-                    # while not found or times_looped < 100:
-                    #     try:
-                    #         actions.click(self.driver.find_element_by_xpath('//*[@id="pre-video-container"]')).perform()
-                    #         found = True
-                    #     except exceptions.StaleElementReferenceException:
-                    #         print("StaleElementReferenceException!")
-                    #         times_looped += 1
-                    #         found = False
+                    post_video_screen = self.driver.find_element_by_xpath('//*[@id="post-video-container"]')
 
-                    # Select slide option instead of video (Top left of screen)
-                    # Wait until the element is present
-                    slide_player_button = WebDriverWait(self.driver, 10).until(
-                        EC.element_to_be_clickable((By.XPATH, '//*[@id="navbar-collapse-1"]/ul[1]/li[4]/div/button[2]'))
-                    )
+                    # Sets the display="none" to blank to force screen to show
+                    # thus making it interactable
+                    self.driver.execute_script("arguments[0].style.display = '';", post_video_screen)
 
-                    slide_player_button.click()
-
-
-
-                    element_exists = True
-                    while element_exists:
-                        try:
-                            self.driver.find_element_by_xpath('/html/body/div[3]/div[1]/div[1]/div[3]').click()
-                        except exceptions.ElementNotInteractableException:
-                            logging.error("Next slide button not interactable")
-                            element_exists = False
-
-                    # Press "Continue"
-                    try:
-                        self.driver.find_element_by_xpath('//*[@id="video-slides"]/a').click()
-
-                    except exceptions.ElementNotInteractableException:
-                        logging.error("Continue button not interactable")
-
-
+                    self.driver.find_element_by_xpath('//*[@id="done-button"]').click()
 
                 try:
-                    if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'):
+                    if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span').text:
                         logging.info("Is Example")
                         found = False
                         times_looped = 0
@@ -205,11 +174,13 @@ class WebDriver:
                                 times_looped += 1
 
                 except exceptions.NoSuchElementException:
+                    logging.info("Example header not found")
                     pass
 
                 try:
-                    if "Exercise" in self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()'):
+                    if "Exercise" in self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2').text:
                         print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
+                        break
 
                 except exceptions.NoSuchElementException:
                     logging.error("No Exercise header element")
