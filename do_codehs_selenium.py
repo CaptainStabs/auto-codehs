@@ -9,6 +9,7 @@ from selenium_stealth import stealth
 from selenium.common import exceptions
 from _secrets import email, password, driver_path, binary_path
 import requests
+import logging
 # import heartrate; heartrate.trace(browser=True, daemon=True)
 
 class WebDriver:
@@ -19,6 +20,7 @@ class WebDriver:
         self.options.add_argument("start-maximized")
         self.options.add_experimental_option("excludeSwitches", ["enable-automation"])
         self.options.add_experimental_option('useAutomationExtension', False)
+        logging.basicConfig(level=logging.INFO)
         # self.options.add_argument("user-data-dir=C:\\Users\\lilli\\AppData\\Local\\Google\\Chrome\\User Data\\Default")
 
         # self.options.add_argument("--headless")
@@ -122,7 +124,7 @@ class WebDriver:
         section_number = "234939"
         print("Going to first assignment")
         for assignment_number in range(50244505, 50244630):
-            print("starting loop")
+            # print("starting loop")
             url = f"https://codehs.com/student/{student_number}/section/{section_number}/assignment/{assignment_number}/"
             self.driver.get(url)
 
@@ -137,6 +139,7 @@ class WebDriver:
 
             try:
                 if "Quiz" in self.driver.find_element_by_xpath('/html/body/div[4]/h1/text()'):
+                    logging.info("Is quiz")
                     is_quiz = True
                 else:
                     is_quiz = False
@@ -159,24 +162,36 @@ class WebDriver:
                     #         times_looped += 1
                     #         found = False
 
-                    video_player = WebDriverWait(self.driver, 10).until(
-                        EC.element_to_be_clickable((By.XPATH, '//*[@id="video-types"]/button[2]'))
+                    # Select slide option instead of video (Top left of screen)
+                    # Wait until the element is present
+                    slide_player_button = WebDriverWait(self.driver, 10).until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="navbar-collapse-1"]/ul[1]/li[4]/div/button[2]'))
                     )
 
-                    video_player.click()
+                    slide_player_button.click()
+
+
 
                     element_exists = True
-
                     while element_exists:
                         try:
-                            video_player.send_keys(Keys.ARROW_RIGHT)
+                            self.driver.find_element_by_xpath('/html/body/div[3]/div[1]/div[1]/div[3]').click()
                         except exceptions.ElementNotInteractableException:
+                            logging.error("Next slide button not interactable")
                             element_exists = False
+
+                    # Press "Continue"
+                    try:
+                        self.driver.find_element_by_xpath('//*[@id="video-slides"]/a').click()
+
+                    except exceptions.ElementNotInteractableException:
+                        logging.error("Continue button not interactable")
 
 
 
                 try:
-                    if "Example:" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'):
+                    if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'):
+                        logging.info("Is Example")
                         found = False
                         times_looped = 0
                         while not found or times_looped < 100:
@@ -197,11 +212,12 @@ class WebDriver:
                         print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
 
                 except exceptions.NoSuchElementException:
+                    logging.error("No Exercise header element")
                     pass
 
             # print(self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'))
 
-            print("reached end of loop")
+            # print("reached end of loop")
             # print(assignment_number)
 
 url = "https://codehs.com/student/1758629/section/234939/"
