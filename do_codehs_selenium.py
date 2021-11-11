@@ -12,7 +12,7 @@ import requests
 import logging
 from urllib import parse
 import time
-# import heartrate; heartrate.trace(browser=True, daemon=True)
+import heartrate; heartrate.trace(browser=True, daemon=True)
 
 class WebDriver:
     def __init__(self):
@@ -124,7 +124,7 @@ class WebDriver:
 
         student_number = "1758629"
         section_number = "234939"
-        assignment_number = "50244509"
+        assignment_number = "50244514"
         end_number = "50244630"
 
         finished = False
@@ -196,6 +196,7 @@ class WebDriver:
 
                     self.driver.find_element_by_xpath('//*[@id="done-button"]').click()
                     type_found = True
+
                 if not type_found:
                     try:
                         if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span').text:
@@ -244,7 +245,7 @@ class WebDriver:
                         if "Exercise" in self.driver.page_source:
                             # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
                             solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
-                            
+
                             answer = requests.request("GET", solution_url)
 
                             try:
@@ -254,13 +255,47 @@ class WebDriver:
                                 logging.error("ElementNotInteractableException for assignment modal")
 
                             answer_box = self.driver.find_element_by_xpath('//*[@id="ace-editor"]/textarea')
+                            answer_box.clear()
                             answer_box.send_keys(answer.text)
 
                             try:
-                                self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                                submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]')
+                                self.driver.execute_script("arguments[0].click();", submit_continue_btn)
 
                             except exceptions.ElementNotInteractableException:
                                 logging.error("ElementNotInteractableException on submit button")
+                            except exceptions.JavascriptException:
+                                logging.error("JavascriptException on submit button")
+                            except exceptions.NoSuchElementException:
+                                logging.error("NoSuchElement on submit button")
+
+                            try:
+                                submit_correct_button = self.driver.find_element_by_xpath('//*[@id="submit-correct"]')
+                                self.driver.execute_script("arguments[0].click();", submit_correct_button)
+
+                            except exceptions.ElementNotInteractableException:
+                                logging.error("ElementNotInteractableException on submit correct button")
+
+                            except exceptions.JavascriptException:
+                                logging.error("JavascriptException, submit-correct")
+
+                            except exceptions.NoSuchElementException:
+                                logging.error("NoSuchElementException, submit correct")
+
+
+
+                            try:
+                                continue_anyways_btn = self.driver.find_element_by_xpath('//*[@id="continue-anyways-btn"]')
+                                self.driver.execute_script("arguments[0].click();", continue_anyways_btn)
+
+                            except exceptions.ElementNotInteractableException:
+                                logging.error("ElementNotInteractableException on continue anyways button")
+
+                            except exceptions.JavascriptException:
+                                logging.error("JavascriptException, continue anyways btn")
+
+                            except exceptions.NoSuchElementException:
+                                logging.error("NoSuchElementException on continue anyways button")
 
                             type_found = True
 
