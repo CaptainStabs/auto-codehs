@@ -120,8 +120,6 @@ class WebDriver:
                 print("Stale element error")
                 break
 
-
-
         student_number = "1758629"
         section_number = "234939"
         assignment_number = "50244514"
@@ -159,7 +157,6 @@ class WebDriver:
                 is_quiz = False
 
             if not is_quiz:
-
                 try:
                     parsed_url = parse.urlparse(self.driver.current_url)
 
@@ -177,13 +174,11 @@ class WebDriver:
                     time.sleep(5)
                     type_found = True
 
-
                 except exceptions.NoSuchElementException:
                     logging.error("NoSuchElementException, is not lesson page")
 
                 except exceptions.StaleElementReferenceException:
                     logging.error("StaleElementReferenceException, probably not a lesson page")
-
 
                 if is_video_assignment:
                     # self.submit_answer(student_assignment_id)
@@ -282,8 +277,6 @@ class WebDriver:
                             except exceptions.NoSuchElementException:
                                 logging.error("NoSuchElementException, submit correct")
 
-
-
                             try:
                                 continue_anyways_btn = self.driver.find_element_by_xpath('//*[@id="continue-anyways-btn"]')
                                 self.driver.execute_script("arguments[0].click();", continue_anyways_btn)
@@ -303,7 +296,6 @@ class WebDriver:
                         logging.error("No Exercise header element")
                         pass
 
-
             if is_quiz:
                 # There is no next button on the quiz until you complete it,
                 # so it just increments the assignment number instead
@@ -316,14 +308,12 @@ class WebDriver:
                 new_path = "/".join(parsed_url[2].split('/')[:-2]) + f"/{next_assignment_number}"
                 print(new_path)
 
-
                 print("https://" + str('/'.join(parsed_url[1:2])) + new_path)
                 self.driver.get("https://" + str('/'.join(parsed_url[1:2])) + new_path)
                 type_found = True
 
             if end_number in self.driver.current_url:
                 finished = True
-
 
             # print(self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span/text()'))
 
