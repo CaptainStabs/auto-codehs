@@ -12,7 +12,7 @@ import requests
 import logging
 from urllib import parse
 import time
-import heartrate; heartrate.trace(browser=True, daemon=True)
+# import heartrate; heartrate.trace(browser=True, daemon=True)
 
 class WebDriver:
     def __init__(self):
