@@ -271,15 +271,23 @@ class WebDriver:
 
                                 solution_url = "https://" + str('/'.join(parsed_url[1:2])) + new_path
 
-                                answer = requests.request("GET", solution_url)
+                                if "html" not in file.text:
+                                    answer = requests.request("GET", solution_url).text
 
-                                cleaner = Cleaner()
-                                cleaner.javascript = True
-
-                                if "css" not in file.text:
-                                    answer = str(lxml.html.tostring(cleaner.clean_html(lxml.html.fromstring(answer.text))))
                                 else:
-                                    answer = answer.text
+                                    self.driver.execute_script("window.open('');")
+                                    self.driver.switch_to.window(self.driver.window_handles[1])
+                                    self.driver.get(solution_url)
+                                    answer = self.driver.page_source
+                                    self.driver.close()
+                                    self.driver.switch_to.window(self.driver.window_handles[0])
+
+                                    soup = BeautifulSoup(answer, 'html.parser')
+                                    for data in soup(["noscript", "script", "grammarly-desktop-integration"]):
+                                        data.decompose()
+
+                                    answer = str(soup)
+                                    print("Answer: " + str(answer))
 
                                 logging.info("Got answer... selecting file...")
                                 try:
