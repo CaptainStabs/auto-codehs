@@ -12,6 +12,8 @@ import requests
 import logging
 from urllib import parse
 import time
+from bs4 import BeautifulSoup
+
 # import heartrate; heartrate.trace(browser=True, daemon=True)
 
 class WebDriver:
@@ -122,7 +124,7 @@ class WebDriver:
 
         student_number = "1758629"
         section_number = "234939"
-        assignment_number = "50244514"
+        assignment_number = "50244521"
         end_number = "50244630"
 
         finished = False
@@ -158,6 +160,7 @@ class WebDriver:
 
             if not is_quiz:
                 try:
+                    # This is the module overview page.
                     parsed_url = parse.urlparse(self.driver.current_url)
 
                     # This could be compressed down to one line
@@ -240,8 +243,10 @@ class WebDriver:
                         if "Exercise" in self.driver.page_source:
                             # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
                             solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
-
-                            answer = requests.request("GET", solution_url)
+                            file_list = self.driver.find_element_by_xpath('//*[@id="panels"]/div[1]/div[4]/div/div/ul')
+                            file_objects = file_list.find_elements_by_tag_name("li")
+                            # print("file_objects: " + str(file_objects))
+                            # print("file_objects: " + str(len(file_objects.text)))
 
                             try:
                                 self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/div[2]/button').click()
@@ -249,9 +254,47 @@ class WebDriver:
                             except exceptions.ElementNotInteractableException:
                                 logging.error("ElementNotInteractableException for assignment modal")
 
-                            answer_box = self.driver.find_element_by_xpath('//*[@id="ace-editor"]/textarea')
-                            answer_box.clear()
-                            answer_box.send_keys(answer.text)
+                            for i, file in enumerate(file_objects):
+                                # i is list index, file is file
+                                # html indexes start at 1, so we need to start on 1 as well
+                                i += 1
+                                # print("I:" + str(i) + " " + str(type(i)))
+                                # print("File: " + str(file) + " " + str(type(file)))
+                                # https://codehs.com/editor/426681/solution/index.html
+                                logging.info("Getting answers...")
+                                parsed_url = parse.urlparse(solution_url)
+
+                                url_path = str(parsed_url[2]).split('/')
+
+                                new_path = "/".join(parsed_url[2].split('/')[:-1]) + f"/{file.text}"
+                                # print(new_path)
+
+                                solution_url = "https://" + str('/'.join(parsed_url[1:2])) + new_path
+
+                                answer = requests.request("GET", solution_url)
+
+                                cleaner = Cleaner()
+                                cleaner.javascript = True
+
+                                if "css" not in file.text:
+                                    answer = str(lxml.html.tostring(cleaner.clean_html(lxml.html.fromstring(answer.text))))
+                                else:
+                                    answer = answer.text
+
+                                logging.info("Got answer... selecting file...")
+                                try:
+                                    self.driver.find_element_by_xpath(f'//*[@id="panels"]/div[1]/div[4]/div/div/ul/li[{i}]').click()
+
+                                except exceptions.ElementNotInteractableException:
+                                    logging.error("ElementNotInteractableException on file")
+                                except exceptions.ElementClickInterceptedException:
+                                    logging.error("ElementClickInterceptedException on file. Is probably nothing to worry about")
+
+                                logging.info("Typing answer")
+                                answer_box = self.driver.find_element_by_xpath('//*[@id="ace-editor"]/textarea')
+                                answer_box.send_keys(Keys.CONTROL + "a")
+                                answer_box.send_keys(Keys.DELETE)
+                                answer_box.send_keys(answer)
 
                             try:
                                 submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]')
