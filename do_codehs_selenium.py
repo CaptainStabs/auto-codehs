@@ -60,6 +60,81 @@ class WebDriver:
         submitted_answer = requests.request("POST", submit_api_url, data=payload)
         print("Submit API Response: {}".format(submitted_answer.status_code))
 
+    def get_answer(self):
+        # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
+        solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
+        file_list = self.driver.find_element_by_xpath('//*[@id="panels"]/div[1]/div[4]/div/div/ul')
+        file_objects = file_list.find_elements_by_tag_name("li")
+        # print("file_objects: " + str(file_objects))
+        # print("file_objects: " + str(len(file_objects.text)))
+
+        try:
+            self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/div[2]/button').click()
+
+        except exceptions.ElementNotInteractableException:
+            logging.error("ElementNotInteractableException for assignment modal")
+
+        for i, file in enumerate(file_objects):
+            # i is list index, file is file
+            # html indexes start at 1, so we need to start on 1 as well
+            i += 1
+            # print("I:" + str(i) + " " + str(type(i)))
+            # print("File: " + str(file) + " " + str(type(file)))
+            # https://codehs.com/editor/426681/solution/index.html
+            logging.info("Getting answers...")
+            parsed_url = parse.urlparse(solution_url)
+
+            url_path = str(parsed_url[2]).split('/')
+
+            new_path = "/".join(parsed_url[2].split('/')[:-1]) + f"/{file.text}"
+            # print(new_path)
+
+            solution_url = "https://" + str('/'.join(parsed_url[1:2])) + new_path
+
+            if "html" not in file.text:
+                answer = requests.request("GET", solution_url).text
+
+            else:
+                self.driver.execute_script("window.open('');")
+                self.driver.switch_to.window(self.driver.window_handles[1])
+                self.driver.get(solution_url)
+                answer = self.driver.page_source
+                self.driver.close()
+                self.driver.switch_to.window(self.driver.window_handles[0])
+
+                soup = BeautifulSoup(answer, 'html.parser')
+                for data in soup(["noscript", "script", "grammarly-desktop-integration"]):
+                    data.decompose()
+
+                answer = str(soup)
+                print("Answer: " + str(answer))
+
+            logging.info("Got answer... selecting file...")
+            try:
+                self.driver.find_element_by_xpath(f'//*[@id="panels"]/div[1]/div[4]/div/div/ul/li[{i}]').click()
+
+            except exceptions.ElementNotInteractableException:
+                logging.error("ElementNotInteractableException on file")
+            except exceptions.ElementClickInterceptedException:
+                logging.error("ElementClickInterceptedException on file. Is probably nothing to worry about")
+
+            logging.info("Typing answer")
+            times_looped = 0
+
+            while times_looped < 100:
+                try:
+                    answer_box = self.driver.find_element_by_xpath('//*[@id="ace-editor"]/textarea')
+                    answer_box.send_keys(Keys.CONTROL + "a")
+                    answer_box.send_keys(Keys.DELETE)
+                    answer_box.send_keys(answer)
+                    times_looped = 101
+
+                except exceptions.ElementNotInteractableException:
+                    times_looped += 1
+
+                except exceptions.StaleElementReferenceException:
+                    # Exception caused by assignment being finished
+                    times_looped = 101
     def scrape(self, url):
         actions = ActionChains(self.driver)
 
@@ -238,108 +313,68 @@ class WebDriver:
                     except exceptions.NoSuchElementException:
                         logging.info("Example header not found")
                         pass
+
                 if not type_found:
                     try:
                         if "Exercise" in self.driver.page_source:
-                            # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
-                            solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
-                            file_list = self.driver.find_element_by_xpath('//*[@id="panels"]/div[1]/div[4]/div/div/ul')
-                            file_objects = file_list.find_elements_by_tag_name("li")
-                            # print("file_objects: " + str(file_objects))
-                            # print("file_objects: " + str(len(file_objects.text)))
+                            if not type_found:
+                                self.get_answer()
 
-                            try:
-                                self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/div[2]/button').click()
-
-                            except exceptions.ElementNotInteractableException:
-                                logging.error("ElementNotInteractableException for assignment modal")
-
-                            for i, file in enumerate(file_objects):
-                                # i is list index, file is file
-                                # html indexes start at 1, so we need to start on 1 as well
-                                i += 1
-                                # print("I:" + str(i) + " " + str(type(i)))
-                                # print("File: " + str(file) + " " + str(type(file)))
-                                # https://codehs.com/editor/426681/solution/index.html
-                                logging.info("Getting answers...")
-                                parsed_url = parse.urlparse(solution_url)
-
-                                url_path = str(parsed_url[2]).split('/')
-
-                                new_path = "/".join(parsed_url[2].split('/')[:-1]) + f"/{file.text}"
-                                # print(new_path)
-
-                                solution_url = "https://" + str('/'.join(parsed_url[1:2])) + new_path
-
-                                if "html" not in file.text:
-                                    answer = requests.request("GET", solution_url).text
-
-                                else:
-                                    self.driver.execute_script("window.open('');")
-                                    self.driver.switch_to.window(self.driver.window_handles[1])
-                                    self.driver.get(solution_url)
-                                    answer = self.driver.page_source
-                                    self.driver.close()
-                                    self.driver.switch_to.window(self.driver.window_handles[0])
-
-                                    soup = BeautifulSoup(answer, 'html.parser')
-                                    for data in soup(["noscript", "script", "grammarly-desktop-integration"]):
-                                        data.decompose()
-
-                                    answer = str(soup)
-                                    print("Answer: " + str(answer))
-
-                                logging.info("Got answer... selecting file...")
+                            tries = 0
+                            while tries < 90:
                                 try:
-                                    self.driver.find_element_by_xpath(f'//*[@id="panels"]/div[1]/div[4]/div/div/ul/li[{i}]').click()
+                                    submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]')
+                                    self.driver.execute_script("arguments[0].click();", submit_continue_btn)
+                                    tries = 91
 
                                 except exceptions.ElementNotInteractableException:
-                                    logging.error("ElementNotInteractableException on file")
-                                except exceptions.ElementClickInterceptedException:
-                                    logging.error("ElementClickInterceptedException on file. Is probably nothing to worry about")
+                                    logging.error("ElementNotInteractableException on submit button")
+                                    tries += 1
+                                except exceptions.JavascriptException:
+                                    logging.error("JavascriptException on submit button")
+                                    tries += 1
+                                except exceptions.NoSuchElementException:
+                                    logging.error("NoSuchElement on submit button")
+                                    tries += 1
 
-                                logging.info("Typing answer")
-                                answer_box = self.driver.find_element_by_xpath('//*[@id="ace-editor"]/textarea')
-                                answer_box.send_keys(Keys.CONTROL + "a")
-                                answer_box.send_keys(Keys.DELETE)
-                                answer_box.send_keys(answer)
+                            tries = 0
+                            while tries < 90:
+                                try:
+                                    submit_correct_button = self.driver.find_element_by_xpath('//*[@id="submit-correct"]')
+                                    self.driver.execute_script("arguments[0].click();", submit_correct_button)
+                                    tries = 91
 
-                            try:
-                                submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]')
-                                self.driver.execute_script("arguments[0].click();", submit_continue_btn)
+                                except exceptions.ElementNotInteractableException:
+                                    logging.error("ElementNotInteractableException on submit correct button")
+                                    tries += 1
 
-                            except exceptions.ElementNotInteractableException:
-                                logging.error("ElementNotInteractableException on submit button")
-                            except exceptions.JavascriptException:
-                                logging.error("JavascriptException on submit button")
-                            except exceptions.NoSuchElementException:
-                                logging.error("NoSuchElement on submit button")
+                                except exceptions.JavascriptException:
+                                    logging.error("JavascriptException, submit-correct")
+                                    tries += 1
 
-                            try:
-                                submit_correct_button = self.driver.find_element_by_xpath('//*[@id="submit-correct"]')
-                                self.driver.execute_script("arguments[0].click();", submit_correct_button)
+                                except exceptions.NoSuchElementException:
+                                    logging.error("NoSuchElementException, submit correct")
+                                    tries += 1
 
-                            except exceptions.ElementNotInteractableException:
-                                logging.error("ElementNotInteractableException on submit correct button")
+                            while tries < 90:
+                                try:
+                                    continue_anyways_btn = self.driver.find_element_by_xpath('//*[@id="continue-anyways-btn"]')
+                                    self.driver.execute_script("arguments[0].click();", continue_anyways_btn)
+                                    tries = 91
 
-                            except exceptions.JavascriptException:
-                                logging.error("JavascriptException, submit-correct")
+                                except exceptions.ElementNotInteractableException:
+                                    logging.error("ElementNotInteractableException on continue anyways button")
+                                    tries += 1
 
-                            except exceptions.NoSuchElementException:
-                                logging.error("NoSuchElementException, submit correct")
+                                except exceptions.JavascriptException:
+                                    logging.error("JavascriptException, continue anyways btn")
+                                    tries += 1
 
-                            try:
-                                continue_anyways_btn = self.driver.find_element_by_xpath('//*[@id="continue-anyways-btn"]')
-                                self.driver.execute_script("arguments[0].click();", continue_anyways_btn)
+                                except exceptions.NoSuchElementException:
+                                    logging.error("NoSuchElementException on continue anyways button")
+                                    tries += 1
 
-                            except exceptions.ElementNotInteractableException:
-                                logging.error("ElementNotInteractableException on continue anyways button")
-
-                            except exceptions.JavascriptException:
-                                logging.error("JavascriptException, continue anyways btn")
-
-                            except exceptions.NoSuchElementException:
-                                logging.error("NoSuchElementException on continue anyways button")
+                            time.sleep(2)
 
                             type_found = True
 
