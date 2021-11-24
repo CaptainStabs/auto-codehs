@@ -14,7 +14,7 @@ from urllib import parse
 import time
 from bs4 import BeautifulSoup
 
-# import heartrate; heartrate.trace(browser=True, daemon=True)
+import heartrate; heartrate.trace(browser=True, daemon=True)
 
 class WebDriver:
     def __init__(self):
@@ -199,7 +199,7 @@ class WebDriver:
 
         student_number = "1758629"
         section_number = "234939"
-        assignment_number = "50244521"
+        assignment_number = "50244528"
         end_number = "50244630"
 
         finished = False
@@ -272,7 +272,7 @@ class WebDriver:
 
                 if not type_found:
                     try:
-                        if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span').text or "Example" in self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div/div/h2').text:
+                        if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span').text:
                             logging.info("Is Example")
 
                             # times_looped = 0
@@ -307,32 +307,44 @@ class WebDriver:
 
                                 except exceptions.ElementClickInterceptedException:
                                     break
-                                    
-                            if times_looped != 51:
-                                while times_looped < 50:
-                                    try:
-                                        next_button = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div/div/button').click()
-                                        # Fewer variables if I just pretend
-                                        # that 101 = True for found
-                                        self.driver.execute_script("arguments[0].click();", next_button)
-                                        times_looped = 101
-
-                                    except exceptions.StaleElementReferenceException:
-                                        print("StaleElementReferenceException")
-                                        times_looped += 1
-
-                                    except exceptions.JavascriptException:
-                                        logging.info("JavascriptException")
-                                        times_looped += 1
-
-                                    except exceptions.ElementClickInterceptedException:
-                                        break
 
                                 type_found = True
 
                     except exceptions.NoSuchElementException:
                         logging.info("Example header not found")
                         pass
+
+                if not type_found:
+                    try:
+                        if "Example" in self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div/div/h2').text:
+                            logging.info("Is Example (Second Type)")
+                            times_looped = 0
+                            while times_looped < 50:
+                                try:
+                                    example_modal_button = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div/div/button')
+                                    self.driver.execute_script("arguments[0].click();", example_modal_button)
+
+                                    next_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                                    self.driver.execute_script("arguments[0].click();", next_button)
+
+                                    times_looped = 51
+
+                                except exceptions.StaleElementReferenceException:
+                                    print("StaleElementReferenceException example button")
+                                    times_looped += 1
+
+                                except exceptions.JavascriptException:
+                                    logging.info("JavascriptException example button")
+                                    times_looped += 1
+
+                                except exceptions.ElementClickInterceptedException:
+                                    break
+
+                            type_found = True
+                    except exceptions.NoSuchElementException:
+                        logging.info("Example header not found")
+                        pass
+
 
                 if not type_found:
                     try:
