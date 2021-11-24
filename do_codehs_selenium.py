@@ -272,7 +272,7 @@ class WebDriver:
 
                 if not type_found:
                     try:
-                        if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span').text:
+                        if "Example" in self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/div[1]/span').text or "Example" in self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div/div/h2').text:
                             logging.info("Is Example")
 
                             # times_looped = 0
@@ -289,13 +289,13 @@ class WebDriver:
 
                             times_looped = 0
                             # Click next
-                            while times_looped < 100:
+                            while times_looped < 50:
                                 try:
                                     next_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
                                     # Fewer variables if I just pretend
                                     # that 101 = True for found
                                     self.driver.execute_script("arguments[0].click();", next_button)
-                                    times_looped = 101
+                                    times_looped = 51
 
                                 except exceptions.StaleElementReferenceException:
                                     print("StaleElementReferenceException")
@@ -307,8 +307,28 @@ class WebDriver:
 
                                 except exceptions.ElementClickInterceptedException:
                                     break
+                                    
+                            if times_looped != 51:
+                                while times_looped < 50:
+                                    try:
+                                        next_button = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div/div/button').click()
+                                        # Fewer variables if I just pretend
+                                        # that 101 = True for found
+                                        self.driver.execute_script("arguments[0].click();", next_button)
+                                        times_looped = 101
 
-                            type_found = True
+                                    except exceptions.StaleElementReferenceException:
+                                        print("StaleElementReferenceException")
+                                        times_looped += 1
+
+                                    except exceptions.JavascriptException:
+                                        logging.info("JavascriptException")
+                                        times_looped += 1
+
+                                    except exceptions.ElementClickInterceptedException:
+                                        break
+
+                                type_found = True
 
                     except exceptions.NoSuchElementException:
                         logging.info("Example header not found")
