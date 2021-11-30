@@ -61,11 +61,6 @@ class WebDriver:
         print("Submit API Response: {}".format(submitted_answer.status_code))
 
     def get_answer(self):
-        student_number = "1758629"
-        section_number = "234939"
-        assignment_number = "50244528"
-        end_number = "50244630"
-
         # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
         solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
         file_list = self.driver.find_element_by_xpath('//*[@id="panels"]/div[1]/div[4]/div/div/ul')
@@ -143,7 +138,14 @@ class WebDriver:
                 except exceptions.StaleElementReferenceException:
                     # Exception caused by assignment being finished
                     times_looped = 101
-    def scrape(self, url):
+
+    def scrape(self, url, configs):
+        # Probably unpythonic, but w/e
+        student_number = configs["student_number"]
+        section_number = configs["section_number"]
+        assignment_number = configs["assignment_number"]
+        end_number = configs["end_number"]
+
         actions = ActionChains(self.driver)
 
         self.driver.get(url)
@@ -456,7 +458,14 @@ class WebDriver:
         except exceptions.NoSuchElementException:
             return False
         return True
+
 url = "https://codehs.com/student/1758629/section/234939/"
 
+configs = {
+    "student_number":"1758629",
+    "section_number":"234939",
+    "assignment_number":"50244528",
+    "end_number":"50244630",
+}
 x = WebDriver()
-x.scrape(url)
+x.scrape(url, configs)
