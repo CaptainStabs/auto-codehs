@@ -65,7 +65,7 @@ class WebDriver:
         section_number = "234939"
         assignment_number = "50244528"
         end_number = "50244630"
-        
+
         # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
         solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
         file_list = self.driver.find_element_by_xpath('//*[@id="panels"]/div[1]/div[4]/div/div/ul')
@@ -83,9 +83,6 @@ class WebDriver:
             # i is list index, file is file
             # html indexes start at 1, so we need to start on 1 as well
             i += 1
-            # print("I:" + str(i) + " " + str(type(i)))
-            # print("File: " + str(file) + " " + str(type(file)))
-            # https://codehs.com/editor/426681/solution/index.html
             logging.info("Getting answers...")
             parsed_url = parse.urlparse(solution_url)
 
@@ -100,6 +97,7 @@ class WebDriver:
                 answer = requests.request("GET", solution_url).text
 
             else:
+                # To get the
                 self.driver.execute_script("window.open('');")
                 self.driver.switch_to.window(self.driver.window_handles[1])
                 self.driver.get(solution_url)
@@ -107,6 +105,8 @@ class WebDriver:
                 self.driver.close()
                 self.driver.switch_to.window(self.driver.window_handles[0])
 
+                # Clean the answer removing the items in list
+                # (Answer is marked as incorrect if there is a noscript or script in it)
                 soup = BeautifulSoup(answer, 'html.parser')
                 for data in soup(["noscript", "script", "grammarly-desktop-integration"]):
                     data.decompose()
@@ -129,9 +129,12 @@ class WebDriver:
             while times_looped < 100:
                 try:
                     answer_box = self.driver.find_element_by_xpath('//*[@id="ace-editor"]/textarea')
+                    # Using .clear method was not reliable enough
+                    # Clear the answer box before typing answer
                     answer_box.send_keys(Keys.CONTROL + "a")
                     answer_box.send_keys(Keys.DELETE)
                     answer_box.send_keys(answer)
+
                     times_looped = 101
 
                 except exceptions.ElementNotInteractableException:
