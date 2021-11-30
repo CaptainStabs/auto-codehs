@@ -13,6 +13,7 @@ import logging
 from urllib import parse
 import time
 from bs4 import BeautifulSoup
+import pyperclip as pc
 
 import heartrate; heartrate.trace(browser=True, daemon=True)
 
@@ -107,7 +108,7 @@ class WebDriver:
                     data.decompose()
 
                 answer = str(soup)
-                print("Answer: " + str(answer))
+                # print("Answer: " + str(answer))
 
             logging.info("Got answer... selecting file...")
             try:
@@ -128,7 +129,10 @@ class WebDriver:
                     # Clear the answer box before typing answer
                     answer_box.send_keys(Keys.CONTROL + "a")
                     answer_box.send_keys(Keys.DELETE)
-                    answer_box.send_keys(answer)
+
+                    # Pasting from clipboard is faster
+                    pc.copy(answer)
+                    answer_box.send_keys(Keys.CONTROL + "v")
 
                     times_looped = 101
 
