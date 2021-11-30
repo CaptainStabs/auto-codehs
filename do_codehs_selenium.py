@@ -369,6 +369,15 @@ class WebDriver:
                         logging.error("No Exercise header element")
                         pass
 
+                if not type_found:
+                    try:
+                        if "badge-description" in self.driver.page_source:
+                            self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
+                            
+                    except exceptions.NoSuchElementException:
+                        logging.info("Is not a badge page")
+                        pass
+
             if is_quiz:
                 # There is no next button on the quiz until you complete it,
                 # so it just increments the assignment number instead
