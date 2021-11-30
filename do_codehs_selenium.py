@@ -373,7 +373,7 @@ class WebDriver:
                     try:
                         if "badge-description" in self.driver.page_source:
                             self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
-                            
+
                     except exceptions.NoSuchElementException:
                         logging.info("Is not a badge page")
                         pass
@@ -472,13 +472,15 @@ class WebDriver:
             return False
         return True
 
-url = "https://codehs.com/student/1758629/section/234939/"
 
-configs = {
-    "student_number":"1758629",
-    "section_number":"234939",
-    "assignment_number":"50244528",
-    "end_number":"50244630",
-}
-x = WebDriver()
-x.scrape(url, configs)
+if __name__ == '__main__':
+    url = "https://codehs.com/student/1758629/section/234939/"
+
+    configs = {
+        "student_number":"1758629",
+        "section_number":"234939",
+        "assignment_number":"50244531",
+        "end_number":"50244630",
+    }
+    x = WebDriver()
+    x.scrape(url, configs)
