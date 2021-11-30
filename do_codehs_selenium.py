@@ -148,62 +148,7 @@ class WebDriver:
 
         self.driver.get(url)
 
-        login_chrome_button = self.driver.find_element_by_xpath('//*[@id="login-form"]/form/div[1]')
-        print("Clicking")
-        actions.click(login_chrome_button).perform()
-
-        print("Looking for email box")
-        found = False
-        times_looped = 0
-
-        while not found and times_looped < 10000:
-            try:
-                email_box = self.driver.find_element_by_xpath('//*[@id="identifierId"]')
-                found = True
-
-            except exceptions.NoSuchElementException:
-                print("Couldn't find it!")
-                found = False
-                times_looped += 1
-                print(times_looped)
-
-            except exceptions.StaleElementReferenceException:
-                print("Email button dumb error")
-                times_looped += 1
-                print(times_looped)
-                found = False
-
-        print("Typing Email")
-        email_box.send_keys(email)
-        email_box.send_keys(Keys.ENTER)
-        found = False
-        times_looped = 0
-        while not found and times_looped < 1000:
-            try:
-                password_box = self.driver.find_element_by_xpath('//*[@id="password"]/div[1]/div/div[1]/input')
-                found = True
-
-            except exceptions.NoSuchElementException:
-                print("Couldn't find it!")
-                found = False
-                times_looped += 1
-                print(times_looped)
-
-        worked = False
-        times_looped = 0
-        while not worked or times_looped < 500:
-            try:
-                password_box.send_keys(password)
-                password_box.send_keys(Keys.ENTER)
-                worked = True
-            except exceptions.ElementNotInteractableException:
-                print("Not interactable BS")
-                times_looped +=1
-                print(times_looped)
-                worked = False
-            except exceptions.StaleElementReferenceException:
-                print("Stale element error")
-                break
+        self.login()
 
         finished = False
         print("Going to first assignment")
@@ -225,6 +170,7 @@ class WebDriver:
 
             type_found = False
 
+            # This convoluted code will need to be untangled, it's ugly.
             try:
                 if "Quiz" in self.driver.find_element_by_xpath('/html/body/div[4]/h1').text:
                     logging.info("Is quiz")
@@ -441,6 +387,75 @@ class WebDriver:
             # print("reached end of loop")
             # print(assignment_number)
 
+    def login(self):
+        # Google login button
+        self.driver.find_element_by_xpath('//*[@id="login-form"]/form/div[1]').click()
+
+        print("Looking for email box")
+        found = False
+        times_looped = 0
+
+        while not found and times_looped < 10000:
+            try:
+                email_box = self.driver.find_element_by_xpath('//*[@id="identifierId"]')
+                found = True
+
+            except exceptions.NoSuchElementException:
+                print("Couldn't find it!")
+                found = False
+                times_looped += 1
+                print(times_looped)
+
+            except exceptions.StaleElementReferenceException:
+                print("Email button dumb error")
+                times_looped += 1
+                print(times_looped)
+                found = False
+
+        logging.info("Typing Email")
+        email_box.send_keys(email)
+        email_box.send_keys(Keys.ENTER)
+
+        # Check if there is a captcha, and if so, wait for user to fill it out
+        # (Removes the pressure from the user to finish the captcha before loop finishes)
+        if self.check_exists_by_xpath('//*[@id="captchaimg"]'):
+            WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+
+        found = False
+        times_looped = 0
+        while not found and times_looped < 1000:
+            try:
+                password_box = self.driver.find_element_by_xpath('//*[@id="password"]/div[1]/div/div[1]/input')
+                found = True
+
+            except exceptions.NoSuchElementException:
+                print("Couldn't find it!")
+                found = False
+                times_looped += 1
+                print(times_looped)
+
+        worked = False
+        times_looped = 0
+        while not worked or times_looped < 500:
+            try:
+                password_box.send_keys(password)
+                password_box.send_keys(Keys.ENTER)
+                worked = True
+            except exceptions.ElementNotInteractableException:
+                print("Not interactable BS")
+                times_looped +=1
+                print(times_looped)
+                worked = False
+            except exceptions.StaleElementReferenceException:
+                print("Stale element error")
+                break
+
+    def check_exists_by_xpath(self, xpath):
+        try:
+            self.driver.find_element_by_xpath(xpath)
+        except exceptions.NoSuchElementException:
+            return False
+        return True
 url = "https://codehs.com/student/1758629/section/234939/"
 
 x = WebDriver()
