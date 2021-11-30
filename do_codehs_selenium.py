@@ -61,6 +61,11 @@ class WebDriver:
         print("Submit API Response: {}".format(submitted_answer.status_code))
 
     def get_answer(self):
+        student_number = "1758629"
+        section_number = "234939"
+        assignment_number = "50244528"
+        end_number = "50244630"
+        
         # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
         solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
         file_list = self.driver.find_element_by_xpath('//*[@id="panels"]/div[1]/div[4]/div/div/ul')
@@ -196,11 +201,6 @@ class WebDriver:
             except exceptions.StaleElementReferenceException:
                 print("Stale element error")
                 break
-
-        student_number = "1758629"
-        section_number = "234939"
-        assignment_number = "50244528"
-        end_number = "50244630"
 
         finished = False
         print("Going to first assignment")
@@ -387,7 +387,7 @@ class WebDriver:
                                 except exceptions.NoSuchElementException:
                                     logging.error("NoSuchElementException, submit correct")
                                     tries += 1
-
+                            tries = 0
                             while tries < 90:
                                 try:
                                     continue_anyways_btn = self.driver.find_element_by_xpath('//*[@id="continue-anyways-btn"]')
