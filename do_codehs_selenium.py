@@ -432,6 +432,10 @@ class WebDriver:
                                     logging.error("NoSuchElement on submit button")
                                     tries += 1
 
+                                except exceptions.StaleElementReferenceException:
+                                    logging.error("StaleElementReferenceException")
+                                    tries += 1
+
                     # except exceptions.NoSuchElementException:
                     #     logging.error("No Exercise header element")
                     #     pass
