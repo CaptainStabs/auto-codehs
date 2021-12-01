@@ -233,6 +233,7 @@ class WebDriver:
                     # Click on CodeHS video provider
                     self.driver.find_element_by_xpath('//*[@id="video-types"]/button[1]').click()
 
+                    WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="codehs-video-container"]')))
                     while self.driver.find_element_by_xpath('//*[@id="codehs-video-container"]').is_displayed():
                         try:
                             self.driver.execute_script('document.getElementsByTagName("video")[0].currentTime += 30;')
@@ -325,11 +326,18 @@ class WebDriver:
 
 
                 if not type_found:
-                    try:
-                        if "Exercise" in self.driver.page_source:
-                            if not type_found:
+                    # try:
+                    if "Exercise" in self.driver.page_source:
+                        if not type_found:
+                            try:
                                 self.get_answer(can_copy_paste)
+                                frq = False
 
+                            except exceptions.NoSuchElementException:
+                                logging.error("NoSuchElementException on get_answer")
+                                frq = True
+
+                        if not frq:
                             tries = 0
                             while tries < 30:
                                 try:
@@ -388,14 +396,45 @@ class WebDriver:
 
                             type_found = True
 
-                    except exceptions.NoSuchElementException:
-                        logging.error("No Exercise header element")
-                        pass
+                        else:
+                            logging.info("Is an FRQ assignment, skipping...")
+
+                            try:
+                                self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/div[2]/button').click()
+
+                            except exceptions.ElementNotInteractableException:
+                                logging.error("ElementNotInteractableException for assignment modal")
+
+                            tries = 0
+                            while tries < 30:
+                                try:
+                                    submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="submit-button"]')
+                                    self.driver.execute_script("arguments[0].click();", submit_continue_btn)
+                                    tries = 91
+
+                                except exceptions.ElementNotInteractableException:
+                                    logging.error("ElementNotInteractableException on submit button")
+                                    tries += 1
+                                except exceptions.JavascriptException:
+                                    logging.error("JavascriptException on submit button")
+                                    tries += 1
+                                except exceptions.NoSuchElementException:
+                                    logging.error("NoSuchElement on submit button")
+                                    tries += 1
+
+                    # except exceptions.NoSuchElementException:
+                    #     logging.error("No Exercise header element")
+                    #     pass
 
                 if not type_found:
                     try:
                         if "badge-description" in self.driver.page_source or "badge-details clearfix incomplete" in self.driver.page_source:
-                            self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
+                            try:
+                                self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
+                            except exceptions.StaleElementReferenceException:
+                                logging.error("StaleElementReferenceException on badge continue button")
+
+                            type_found = True
 
                     except exceptions.NoSuchElementException:
                         logging.info("Is not a badge page")
@@ -478,7 +517,14 @@ class WebDriver:
                 worked = False
             except exceptions.StaleElementReferenceException:
                 print("Stale element error")
+                worked = True
                 break
+
+        try:
+            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="login-form"]/form/div[1]')))
+
+        except:
+            pass
 
         try:
             self.driver.find_element_by_xpath('//*[@id="login-form"]/form/div[1]').click()
@@ -499,7 +545,7 @@ if __name__ == '__main__':
     configs = {
         "student_number":"1758629",
         "section_number":"234939",
-        "assignment_number":"50244601",
+        "assignment_number":"50244595",
         "end_number":"50244630",
         "can_copy_paste": True,
     }
