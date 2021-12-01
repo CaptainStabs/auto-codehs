@@ -61,7 +61,7 @@ class WebDriver:
         submitted_answer = requests.request("POST", submit_api_url, data=payload)
         print("Submit API Response: {}".format(submitted_answer.status_code))
 
-    def get_answer(self):
+    def get_answer(self, can_copy_paste):
         # print("Is exercise: " + str(self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[1]/h2/text()')))
         solution_url = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div[2]/div/iframe').get_attribute("src")
         file_list = self.driver.find_element_by_xpath('//*[@id="panels"]/div[1]/div[4]/div/div/ul')
@@ -130,9 +130,13 @@ class WebDriver:
                     answer_box.send_keys(Keys.CONTROL + "a")
                     answer_box.send_keys(Keys.DELETE)
 
-                    # Pasting from clipboard is faster
-                    pc.copy(answer)
-                    answer_box.send_keys(Keys.CONTROL + "v")
+                    if can_copy_paste:
+                        # Pasting from clipboard is faster
+                        pc.copy(answer)
+                        answer_box.send_keys(Keys.CONTROL + "v")
+
+                    else:
+                        answer_box.send_keys(answer)
 
                     times_looped = 101
 
@@ -149,6 +153,7 @@ class WebDriver:
         section_number = configs["section_number"]
         assignment_number = configs["assignment_number"]
         end_number = configs["end_number"]
+        can_copy_paste = configs["can_copy_paste"]
 
         actions = ActionChains(self.driver)
 
@@ -218,10 +223,25 @@ class WebDriver:
 
                     post_video_screen = self.driver.find_element_by_xpath('//*[@id="post-video-container"]')
 
+                    # WebDriverWait(self.driver, 9000).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="play-btn-container"]/div')))
+                    # self.driver.find_element_by_xpath('//*[@id="play-btn-container"]/div').click()
+                    #
+                    # WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="movie_player"]')))
+                    # video = self.driver.find_element_by_xpath('//*[@id="movie_player"]/div[1]/video')
+                    # video.click()
+                    #
+                    # video_exists = True
+                    # while video_exists:
+                    #     try:
+                    #         video.send_keys(Keys.ARROW_RIGHT)
+                    #         video_exists = False
+                    #     except exception as E:
+                    #         logging.error(E)
+
                     # Sets the display="none" to blank to force screen to show
                     # thus making it interactable
                     self.driver.execute_script("arguments[0].style.display = '';", post_video_screen)
-
+                    # WebDriverWait(self.driver, 9000).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="done-button"]')))
                     self.driver.find_element_by_xpath('//*[@id="done-button"]').click()
                     type_found = True
 
@@ -305,10 +325,10 @@ class WebDriver:
                     try:
                         if "Exercise" in self.driver.page_source:
                             if not type_found:
-                                self.get_answer()
+                                self.get_answer(can_copy_paste)
 
                             tries = 0
-                            while tries < 90:
+                            while tries < 30:
                                 try:
                                     submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]')
                                     self.driver.execute_script("arguments[0].click();", submit_continue_btn)
@@ -325,7 +345,7 @@ class WebDriver:
                                     tries += 1
 
                             tries = 0
-                            while tries < 90:
+                            while tries < 30:
                                 try:
                                     submit_correct_button = self.driver.find_element_by_xpath('//*[@id="submit-correct"]')
                                     self.driver.execute_script("arguments[0].click();", submit_correct_button)
@@ -343,7 +363,7 @@ class WebDriver:
                                     logging.error("NoSuchElementException, submit correct")
                                     tries += 1
                             tries = 0
-                            while tries < 90:
+                            while tries < 30:
                                 try:
                                     continue_anyways_btn = self.driver.find_element_by_xpath('//*[@id="continue-anyways-btn"]')
                                     self.driver.execute_script("arguments[0].click();", continue_anyways_btn)
@@ -371,7 +391,7 @@ class WebDriver:
 
                 if not type_found:
                     try:
-                        if "badge-description" in self.driver.page_source:
+                        if "badge-description" in self.driver.page_source or "badge-details clearfix incomplete" in self.driver.page_source:
                             self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
 
                     except exceptions.NoSuchElementException:
@@ -438,16 +458,8 @@ class WebDriver:
 
         found = False
         times_looped = 0
-        while not found and times_looped < 1000:
-            try:
-                password_box = self.driver.find_element_by_xpath('//*[@id="password"]/div[1]/div/div[1]/input')
-                found = True
-
-            except exceptions.NoSuchElementException:
-                print("Couldn't find it!")
-                found = False
-                times_looped += 1
-                print(times_looped)
+        WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+        password_box = self.driver.find_element_by_xpath('//*[@id="password"]/div[1]/div/div[1]/input')
 
         worked = False
         times_looped = 0
@@ -479,8 +491,9 @@ if __name__ == '__main__':
     configs = {
         "student_number":"1758629",
         "section_number":"234939",
-        "assignment_number":"50244531",
+        "assignment_number":"50244581",
         "end_number":"50244630",
+        "can_copy_paste": True,
     }
     x = WebDriver()
     x.scrape(url, configs)
