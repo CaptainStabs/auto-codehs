@@ -454,6 +454,8 @@ class WebDriver:
                                 self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
                             except:
                                 pass
+
+                            type_found = True
                     except exceptions.NoSuchElementException:
                         logging.info("Is not an example page")
 
