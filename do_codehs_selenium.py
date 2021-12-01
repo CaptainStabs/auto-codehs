@@ -412,6 +412,9 @@ class WebDriver:
                             except exceptions.ElementNotInteractableException:
                                 logging.error("ElementNotInteractableException for assignment modal")
 
+                            except Exception as e:
+                                logging.error(e)
+
                             tries = 0
                             while tries < 30:
                                 try:
@@ -458,6 +461,13 @@ class WebDriver:
                             type_found = True
                     except exceptions.NoSuchElementException:
                         logging.info("Is not an example page")
+
+                if not type_found:
+                    try:
+                        self.driver.find_element_by_xpath('/html/body/div[3]/div[2]/div[3]/a')
+                        type_found = True
+                    except:
+                        logging.info("Not lightbulb page thing")
 
             if is_quiz:
                 # There is no next button on the quiz until you complete it,
@@ -579,5 +589,6 @@ if __name__ == '__main__':
         "can_copy_paste": True,
         "sign_in_with_google": True,
     }
+
     x = WebDriver()
     x.scrape(url, configs)
