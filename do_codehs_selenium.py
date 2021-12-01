@@ -233,17 +233,19 @@ class WebDriver:
                     # Click on CodeHS video provider
                     self.driver.find_element_by_xpath('//*[@id="video-types"]/button[1]').click()
 
-                    WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="codehs-video-container"]')))
-                    while self.driver.find_element_by_xpath('//*[@id="codehs-video-container"]').is_displayed():
+                    WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="codehsvideo_html5_api"]')))
+
+                    while not post_video_screen.is_displayed():
                         try:
                             self.driver.execute_script('document.getElementsByTagName("video")[0].currentTime += 30;')
+                            logging.info("Skipping 30 seconds")
 
                         except Exception as E:
                             logging.error(E)
 
                     # Sets the display="none" to blank to force screen to show
                     # thus making it interactable
-                    self.driver.execute_script("arguments[0].style.display = '';", post_video_screen)
+                    # self.driver.execute_script("arguments[0].style.display = '';", post_video_screen)
 
                     WebDriverWait(self.driver, 9000).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="done-button"]')))
                     self.driver.find_element_by_xpath('//*[@id="done-button"]').click()
@@ -338,6 +340,11 @@ class WebDriver:
                                 frq = True
 
                         if not frq:
+                            try:
+                                WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="panels"]/div[3]/div/div[1]/button[1]')))
+                            except exceptions.TimeoutException:
+                                pass
+
                             tries = 0
                             while tries < 30:
                                 try:
@@ -545,8 +552,8 @@ if __name__ == '__main__':
     configs = {
         "student_number":"1758629",
         "section_number":"234939",
-        "assignment_number":"50244595",
-        "end_number":"50244630",
+        "assignment_number":"50244517",
+        "end_number":"50244518",
         "can_copy_paste": True,
     }
     x = WebDriver()
