@@ -464,7 +464,7 @@ class WebDriver:
 
                 if not type_found:
                     try:
-                        self.driver.find_element_by_xpath('/html/body/div[3]/div[2]/div[3]/a')
+                        self.driver.find_element_by_xpath('/html/body/div[3]/div[2]/div[3]/a').click()
                         type_found = True
                     except:
                         logging.info("Not lightbulb page thing")
