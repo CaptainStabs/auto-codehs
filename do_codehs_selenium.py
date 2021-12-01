@@ -91,6 +91,7 @@ class WebDriver:
 
             if "html" not in file.text:
                 answer = requests.request("GET", solution_url).text
+                print(answer)
 
             else:
                 # To get the
@@ -112,6 +113,11 @@ class WebDriver:
 
             logging.info("Got answer... selecting file...")
             try:
+                WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable((By.XPATH, f'//*[@id="panels"]/div[1]/div[4]/div/div/ul/li[{i}]')))
+
+            except exceptions.TimeoutException:
+                logging.error("Timeout waiting for first file to be clickable")
+            try:
                 self.driver.find_element_by_xpath(f'//*[@id="panels"]/div[1]/div[4]/div/div/ul/li[{i}]').click()
 
             except exceptions.ElementNotInteractableException:
@@ -122,7 +128,7 @@ class WebDriver:
             logging.info("Typing answer")
             times_looped = 0
 
-            while times_looped < 100:
+            while times_looped < 70:
                 try:
                     answer_box = self.driver.find_element_by_xpath('//*[@id="ace-editor"]/textarea')
                     # Using .clear method was not reliable enough
@@ -145,6 +151,7 @@ class WebDriver:
 
                 except exceptions.StaleElementReferenceException:
                     # Exception caused by assignment being finished
+                    logging.exception("StaleElementReferenceException on answer box")
                     times_looped = 101
 
     def scrape(self, url, configs):
@@ -223,25 +230,21 @@ class WebDriver:
 
                     post_video_screen = self.driver.find_element_by_xpath('//*[@id="post-video-container"]')
 
-                    # WebDriverWait(self.driver, 9000).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="play-btn-container"]/div')))
-                    # self.driver.find_element_by_xpath('//*[@id="play-btn-container"]/div').click()
-                    #
-                    # WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="movie_player"]')))
-                    # video = self.driver.find_element_by_xpath('//*[@id="movie_player"]/div[1]/video')
-                    # video.click()
-                    #
-                    # video_exists = True
-                    # while video_exists:
-                    #     try:
-                    #         video.send_keys(Keys.ARROW_RIGHT)
-                    #         video_exists = False
-                    #     except exception as E:
-                    #         logging.error(E)
+                    # Click on CodeHS video provider
+                    self.driver.find_element_by_xpath('//*[@id="video-types"]/button[1]').click()
+
+                    while self.driver.find_element_by_xpath('//*[@id="codehs-video-container"]').is_displayed():
+                        try:
+                            self.driver.execute_script('document.getElementsByTagName("video")[0].currentTime += 30;')
+
+                        except Exception as E:
+                            logging.error(E)
 
                     # Sets the display="none" to blank to force screen to show
                     # thus making it interactable
                     self.driver.execute_script("arguments[0].style.display = '';", post_video_screen)
-                    # WebDriverWait(self.driver, 9000).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="done-button"]')))
+
+                    WebDriverWait(self.driver, 9000).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="done-button"]')))
                     self.driver.find_element_by_xpath('//*[@id="done-button"]').click()
                     type_found = True
 
@@ -477,6 +480,11 @@ class WebDriver:
                 print("Stale element error")
                 break
 
+        try:
+            self.driver.find_element_by_xpath('//*[@id="login-form"]/form/div[1]').click()
+        except:
+            pass
+
     def check_exists_by_xpath(self, xpath):
         try:
             self.driver.find_element_by_xpath(xpath)
@@ -491,7 +499,7 @@ if __name__ == '__main__':
     configs = {
         "student_number":"1758629",
         "section_number":"234939",
-        "assignment_number":"50244581",
+        "assignment_number":"50244601",
         "end_number":"50244630",
         "can_copy_paste": True,
     }
