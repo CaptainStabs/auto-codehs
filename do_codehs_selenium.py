@@ -166,7 +166,7 @@ class WebDriver:
 
         self.driver.get(url)
 
-        self.login()
+        self.login(configs["sign_in_with_google"])
 
         finished = False
         print("Going to first assignment")
@@ -238,7 +238,7 @@ class WebDriver:
                     while not post_video_screen.is_displayed():
                         try:
                             self.driver.execute_script('document.getElementsByTagName("video")[0].currentTime += 30;')
-                            logging.info("Skipping 30 seconds")
+                            # logging.info("Skipping 30 seconds")
 
                         except Exception as E:
                             logging.error(E)
@@ -447,6 +447,16 @@ class WebDriver:
                         logging.info("Is not a badge page")
                         pass
 
+                if not type_found:
+                    try:
+                        if "Example Program" in self.driver.page_source:
+                            try:
+                                self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                            except:
+                                pass
+                    except exceptions.NoSuchElementException:
+                        logging.info("Is not an example page")
+
             if is_quiz:
                 # There is no next button on the quiz until you complete it,
                 # so it just increments the assignment number instead
@@ -471,72 +481,82 @@ class WebDriver:
             # print("reached end of loop")
             # print(assignment_number)
 
-    def login(self):
-        # Google login button
-        self.driver.find_element_by_xpath('//*[@id="login-form"]/form/div[1]').click()
+    def login(self, use_google_auth):
 
-        print("Looking for email box")
-        found = False
-        times_looped = 0
-
-        while not found and times_looped < 10000:
-            try:
-                email_box = self.driver.find_element_by_xpath('//*[@id="identifierId"]')
-                found = True
-
-            except exceptions.NoSuchElementException:
-                print("Couldn't find it!")
-                found = False
-                times_looped += 1
-                print(times_looped)
-
-            except exceptions.StaleElementReferenceException:
-                print("Email button dumb error")
-                times_looped += 1
-                print(times_looped)
-                found = False
-
-        logging.info("Typing Email")
-        email_box.send_keys(email)
-        email_box.send_keys(Keys.ENTER)
-
-        # Check if there is a captcha, and if so, wait for user to fill it out
-        # (Removes the pressure from the user to finish the captcha before loop finishes)
-        if self.check_exists_by_xpath('//*[@id="captchaimg"]'):
-            WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
-
-        found = False
-        times_looped = 0
-        WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
-        password_box = self.driver.find_element_by_xpath('//*[@id="password"]/div[1]/div/div[1]/input')
-
-        worked = False
-        times_looped = 0
-        while not worked or times_looped < 500:
-            try:
-                password_box.send_keys(password)
-                password_box.send_keys(Keys.ENTER)
-                worked = True
-            except exceptions.ElementNotInteractableException:
-                print("Not interactable BS")
-                times_looped +=1
-                print(times_looped)
-                worked = False
-            except exceptions.StaleElementReferenceException:
-                print("Stale element error")
-                worked = True
-                break
-
-        try:
-            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="login-form"]/form/div[1]')))
-
-        except:
-            pass
-
-        try:
+        if use_google_auth:
+            # Google login button
             self.driver.find_element_by_xpath('//*[@id="login-form"]/form/div[1]').click()
-        except:
-            pass
+
+
+
+
+            print("Looking for email box")
+            found = False
+            times_looped = 0
+
+            while not found and times_looped < 10000:
+                try:
+                    email_box = self.driver.find_element_by_xpath('//*[@id="identifierId"]')
+                    found = True
+
+                except exceptions.NoSuchElementException:
+                    print("Couldn't find it!")
+                    found = False
+                    times_looped += 1
+                    print(times_looped)
+
+                except exceptions.StaleElementReferenceException:
+                    print("Email button dumb error")
+                    times_looped += 1
+                    print(times_looped)
+                    found = False
+
+            logging.info("Typing Email")
+            email_box.send_keys(email)
+            email_box.send_keys(Keys.ENTER)
+
+            # Check if there is a captcha, and if so, wait for user to fill it out
+            # (Removes the pressure from the user to finish the captcha before loop finishes)
+            if self.check_exists_by_xpath('//*[@id="captchaimg"]'):
+                WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+
+            found = False
+            times_looped = 0
+            WebDriverWait(self.driver, 900).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+            password_box = self.driver.find_element_by_xpath('//*[@id="password"]/div[1]/div/div[1]/input')
+
+            worked = False
+            times_looped = 0
+            while not worked or times_looped < 500:
+                try:
+                    password_box.send_keys(password)
+                    password_box.send_keys(Keys.ENTER)
+                    worked = True
+                except exceptions.ElementNotInteractableException:
+                    print("Not interactable BS")
+                    times_looped +=1
+                    print(times_looped)
+                    worked = False
+                except exceptions.StaleElementReferenceException:
+                    print("Stale element error")
+                    worked = True
+                    break
+
+            try:
+                WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="login-form"]/form/div[1]')))
+
+            except:
+                pass
+
+            try:
+                self.driver.find_element_by_xpath('//*[@id="login-form"]/form/div[1]').click()
+            except:
+                pass
+
+        else:
+            self.driver.find_element_by_xpath('//*[@id="login-email"]').send_keys(email)
+            self.driver.find_element_by_xpath('//*[@id="login-password"]').send_keys(password)
+            self.driver.find_element_by_xpath('//*[@id="login-submit"]').click()
 
     def check_exists_by_xpath(self, xpath):
         try:
@@ -552,9 +572,10 @@ if __name__ == '__main__':
     configs = {
         "student_number":"1758629",
         "section_number":"234939",
-        "assignment_number":"50244517",
+        "assignment_number":"50244601",
         "end_number":"50244518",
         "can_copy_paste": True,
+        "sign_in_with_google": True,
     }
     x = WebDriver()
     x.scrape(url, configs)
