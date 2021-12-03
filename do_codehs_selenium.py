@@ -14,6 +14,7 @@ from urllib import parse
 import time
 from bs4 import BeautifulSoup
 import pyperclip as pc
+from _configs import url, configs
 
 import heartrate; heartrate.trace(browser=True, daemon=True)
 
@@ -583,16 +584,16 @@ class WebDriver:
 
 
 if __name__ == '__main__':
-    url = "https://codehs.com/student/1758629/section/234939/"
-
-    configs = {
-        "student_number":"1758629",
-        "section_number":"234939",
-        "assignment_number":"50244601",
-        "end_number":"50244518",
-        "can_copy_paste": True,
-        "sign_in_with_google": True,
-    }
+    # url = "https://codehs.com/student/1758629/section/234939/"
+    #
+    # configs = {
+    #     "student_number":"1758629",
+    #     "section_number":"234939",
+    #     "assignment_number":"50244601",
+    #     "end_number":"50244518",
+    #     "can_copy_paste": True,
+    #     "sign_in_with_google": True,
+    # }
 
     x = WebDriver()
     x.scrape(url, configs)
