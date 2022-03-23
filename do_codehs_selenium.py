@@ -14,6 +14,7 @@ from urllib import parse
 import time
 from bs4 import BeautifulSoup
 import pyperclip as pc
+from _configs import url, configs
 
 import heartrate; heartrate.trace(browser=True, daemon=True)
 
@@ -282,6 +283,7 @@ class WebDriver:
                             while times_looped < 50:
                                 try:
                                     next_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                                    time.sleep(0.5)
                                     # Fewer variables if I just pretend
                                     # that 101 = True for found
                                     self.driver.execute_script("arguments[0].click();", next_button)
@@ -359,6 +361,7 @@ class WebDriver:
                                 try:
                                     submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]')
                                     self.driver.execute_script("arguments[0].click();", submit_continue_btn)
+                                    time.sleep(0.5)
                                     tries = 91
 
                                 except exceptions.ElementNotInteractableException:
@@ -376,6 +379,7 @@ class WebDriver:
                                 try:
                                     submit_correct_button = self.driver.find_element_by_xpath('//*[@id="submit-correct"]')
                                     self.driver.execute_script("arguments[0].click();", submit_correct_button)
+                                    time.sleep(0.5)
                                     tries = 91
 
                                 except exceptions.ElementNotInteractableException:
@@ -429,6 +433,7 @@ class WebDriver:
                                 try:
                                     submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="submit-button"]')
                                     self.driver.execute_script("arguments[0].click();", submit_continue_btn)
+                                    time.sleep(0.5)
                                     tries = 91
 
                                 except exceptions.ElementNotInteractableException:
@@ -452,11 +457,11 @@ class WebDriver:
                 if not type_found:
                     try:
                         if "badge-description" in self.driver.page_source or "badge-details clearfix incomplete" in self.driver.page_source:
-                            while tries < 5:
-                                try:
-                                    self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
-                                except exceptions.StaleElementReferenceException:
-                                    logging.error("StaleElementReferenceException on badge continue button")
+                            try:
+                                self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
+                                time.sleep(0.5)
+                            except exceptions.StaleElementReferenceException:
+                                logging.error("StaleElementReferenceException on badge continue button")
 
                                 type_found = True
 
@@ -469,6 +474,7 @@ class WebDriver:
                         if "Example Program" in self.driver.page_source:
                             try:
                                 self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                                time.sleep(0.5)
                             except:
                                 pass
 
@@ -480,6 +486,7 @@ class WebDriver:
                     try:
                         self.driver.find_element_by_xpath('/html/body/div[3]/div[2]/div[3]/a').click()
                         type_found = True
+                        time.sleep(3)
                     except:
                         logging.info("Not lightbulb page thing")
 
@@ -599,16 +606,16 @@ class WebDriver:
 
 
 if __name__ == '__main__':
-    url = "https://codehs.com/student/1758629/section/234939/"
-
-    configs = {
-        "student_number":"1758629",
-        "section_number":"234939",
-        "assignment_number":"50244686",
-        "end_number":"50244746",
-        "can_copy_paste": False,
-        "sign_in_with_google": True,
-    }
+    # url = "https://codehs.com/student/1758629/section/234939/"
+    #
+    # configs = {
+    #     "student_number":"1758629",
+    #     "section_number":"234939",
+    #     "assignment_number":"50244601",
+    #     "end_number":"50244518",
+    #     "can_copy_paste": True,
+    #     "sign_in_with_google": True,
+    # }
 
     x = WebDriver()
     x.scrape(url, configs)
