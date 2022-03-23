@@ -105,7 +105,16 @@ class WebDriver:
                 # Clean the answer removing the items in list
                 # (Answer is marked as incorrect if there is a noscript or script in it)
                 soup = BeautifulSoup(answer, 'html.parser')
+
+                # For non-bootstrap unit
+                '''
                 for data in soup(["noscript", "script", "grammarly-desktop-integration"]):
+                    data.decompose()
+
+                '''
+
+                # For bootstrap unit
+                for data in soup(["noscript", "grammarly-desktop-integration"]):
                     data.decompose()
 
                 answer = str(soup)
@@ -443,12 +452,13 @@ class WebDriver:
                 if not type_found:
                     try:
                         if "badge-description" in self.driver.page_source or "badge-details clearfix incomplete" in self.driver.page_source:
-                            try:
-                                self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
-                            except exceptions.StaleElementReferenceException:
-                                logging.error("StaleElementReferenceException on badge continue button")
+                            while tries < 5:
+                                try:
+                                    self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
+                                except exceptions.StaleElementReferenceException:
+                                    logging.error("StaleElementReferenceException on badge continue button")
 
-                            type_found = True
+                                type_found = True
 
                     except exceptions.NoSuchElementException:
                         logging.info("Is not a badge page")
@@ -472,6 +482,12 @@ class WebDriver:
                         type_found = True
                     except:
                         logging.info("Not lightbulb page thing")
+
+                if not type_found:
+                    try:
+                        self.driver.find_element_by_xpath('/html/body/div[3]/div/div[2]/a').click()
+                    except:
+                        pass
 
             if is_quiz:
                 # There is no next button on the quiz until you complete it,
@@ -588,9 +604,9 @@ if __name__ == '__main__':
     configs = {
         "student_number":"1758629",
         "section_number":"234939",
-        "assignment_number":"50244601",
-        "end_number":"50244518",
-        "can_copy_paste": True,
+        "assignment_number":"50244686",
+        "end_number":"50244746",
+        "can_copy_paste": False,
         "sign_in_with_google": True,
     }
 
