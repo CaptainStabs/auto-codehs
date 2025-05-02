@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 import pyperclip as pc
 from _configs import url, configs
 
-import heartrate; heartrate.trace(browser=True, daemon=True)
+# import heartrate; heartrate.trace(browser=True, daemon=True)
 
 class WebDriver:
     def __init__(self):
@@ -26,8 +26,11 @@ class WebDriver:
         self.options.add_argument("start-maximized")
         self.options.add_experimental_option("excludeSwitches", ["enable-automation"])
         self.options.add_experimental_option('useAutomationExtension', False)
+
+        self.options.add_argument(r"user-data-dir=C:\\Users\\adria\\AppData\\Local\\Google\\Chrome\\User Data")
+
+
         logging.basicConfig(level=logging.INFO)
-        # self.options.add_argument("user-data-dir=C:\\Users\\lilli\\AppData\\Local\\Google\\Chrome\\User Data\\Default")
 
         # self.options.add_argument("--headless")
         self.driver = webdriver.Chrome(self.PATH, options=self.options)
@@ -176,7 +179,7 @@ class WebDriver:
 
         self.driver.get(url)
 
-        self.login(configs["sign_in_with_google"])
+        # self.login(configs["sign_in_with_google"])
 
         finished = False
         print("Going to first assignment")
@@ -282,7 +285,7 @@ class WebDriver:
                             # Click next
                             while times_looped < 50:
                                 try:
-                                    next_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                                    next_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[4]/div/div[1]/div/button[1]').click()
                                     time.sleep(0.5)
                                     # Fewer variables if I just pretend
                                     # that 101 = True for found
@@ -316,7 +319,7 @@ class WebDriver:
                                     example_modal_button = self.driver.find_element_by_xpath('//*[@id="directions-modal"]/div/div/button')
                                     self.driver.execute_script("arguments[0].click();", example_modal_button)
 
-                                    next_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                                    next_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[4]/div/div[1]/div/button[1]').click()
                                     self.driver.execute_script("arguments[0].click();", next_button)
 
                                     times_looped = 51
@@ -352,14 +355,15 @@ class WebDriver:
 
                         if not frq:
                             try:
-                                WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="panels"]/div[3]/div/div[1]/button[1]')))
+                                WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="panels"]/div[4]/div/div[1]/div/button[1]')))
                             except exceptions.TimeoutException:
                                 pass
 
                             tries = 0
                             while tries < 30:
                                 try:
-                                    submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]')
+                                    
+                                    submit_continue_btn = self.driver.find_element_by_xpath('//*[@id="panels"]/div[4]/div/div[1]/div/button[1]')
                                     self.driver.execute_script("arguments[0].click();", submit_continue_btn)
                                     time.sleep(0.5)
                                     tries = 91
@@ -377,7 +381,7 @@ class WebDriver:
                             tries = 0
                             while tries < 30:
                                 try:
-                                    submit_correct_button = self.driver.find_element_by_xpath('//*[@id="submit-correct"]')
+                                    submit_correct_button = self.driver.find_element_by_xpath('//*[@id="panels"]/div[4]/div/div[1]/div/button[1]')
                                     self.driver.execute_script("arguments[0].click();", submit_correct_button)
                                     time.sleep(0.5)
                                     tries = 91
@@ -473,7 +477,7 @@ class WebDriver:
                     try:
                         if "Example Program" in self.driver.page_source:
                             try:
-                                self.driver.find_element_by_xpath('//*[@id="panels"]/div[3]/div/div[1]/button[1]').click()
+                                self.driver.find_element_by_xpath('//*[@id="panels"]/div[4]/div/div[1]/div/button[1]').click()
                                 time.sleep(0.5)
                             except:
                                 pass
@@ -503,9 +507,10 @@ class WebDriver:
 
                 # This could be compressed down to one line
                 url_path = str(parsed_url[2]).split('/')
-                next_assignment_number = int(url_path[-2]) + 1
+                print(url_path)
+                next_assignment_number = int(url_path[-1]) + 1
                 print(next_assignment_number)
-                new_path = "/".join(parsed_url[2].split('/')[:-2]) + f"/{next_assignment_number}"
+                new_path = "/".join(parsed_url[2].split('/')[:-2]) + "/assignment/" + f"/{next_assignment_number}"
                 print(new_path)
 
                 print("https://" + str('/'.join(parsed_url[1:2])) + new_path)
@@ -606,13 +611,13 @@ class WebDriver:
 
 
 if __name__ == '__main__':
-    # url = "https://codehs.com/student/1758629/section/234939/"
+    # url = "https://codehs.com/student/number/section/number/"
     #
     # configs = {
-    #     "student_number":"1758629",
-    #     "section_number":"234939",
-    #     "assignment_number":"50244601",
-    #     "end_number":"50244518",
+    #     "student_number":"",
+    #     "section_number":"",
+    #     "assignment_number":"",
+    #     "end_number":"",
     #     "can_copy_paste": True,
     #     "sign_in_with_google": True,
     # }
