@@ -27,7 +27,7 @@ class WebDriver:
         self.options.add_experimental_option("excludeSwitches", ["enable-automation"])
         self.options.add_experimental_option('useAutomationExtension', False)
 
-        self.options.add_argument(r"user-data-dir=C:\\Users\\adria\\AppData\\Local\\Google\\Chrome\\User Data")
+        self.options.add_argument(r"user-data-dir=C:\\Users\\users\\AppData\\Local\\Google\\Chrome\\User Data")
 
 
         logging.basicConfig(level=logging.INFO)
